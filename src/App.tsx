@@ -1,115 +1,188 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
+import React, { useState } from 'react'
+import {
+    Linking,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native'
+import QRCodeScanner from 'react-native-qrcode-scanner'
+import Icon from 'react-native-vector-icons/FontAwesome'
 
- import React from 'react';
- import {
-   SafeAreaView,
-   ScrollView,
-   StatusBar,
-   StyleSheet,
-   Text,
-   useColorScheme,
-   View,
- } from 'react-native';
+const App = () => {
 
- import {
-   Colors,
-   DebugInstructions,
-   Header,
-   LearnMoreLinks,
-   ReloadInstructions,
- } from 'react-native/Libraries/NewAppScreen';
+    const [modoScan, setModoScan] = useState<boolean>(true)
+    const [modoResult, setModoResult] = useState<boolean>(false)
+    const [result, setResult] = useState<any>(null)
 
- const Section: React.FC<{
-   title: string;
- }> = ({children, title}) => {
-   const isDarkMode = useColorScheme() === 'dark';
-   return (
-     <View style={styles.sectionContainer}>
-       <Text
-         style={[
-           styles.sectionTitle,
-           {
-             color: isDarkMode ? Colors.white : Colors.black,
-           },
-         ]}>
-         {title}
-       </Text>
-       <Text
-         style={[
-           styles.sectionDescription,
-           {
-             color: isDarkMode ? Colors.light : Colors.dark,
-           },
-         ]}>
-         {children}
-       </Text>
-     </View>
-   );
- };
+    const onSuccess = (e: any) => {
+        setResult(e.data)
+        setModoScan(false)
+        setModoResult(true)
+    }
 
- const App = () => {
-   const isDarkMode = useColorScheme() === 'dark';
+    const activeQR = () => {
+        setModoScan(true)
+        setModoResult(false)
+        setResult(null)
+    }
 
-   const backgroundStyle = {
-     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-   };
+    const closeScan = () => {
+        setModoScan(false)
+        setModoResult(true)
+    }
 
-   return (
-     <SafeAreaView style={backgroundStyle}>
-       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-       <ScrollView
-         contentInsetAdjustmentBehavior="automatic"
-         style={backgroundStyle}>
-         <Header />
-         <View
-           style={{
-             backgroundColor: isDarkMode ? Colors.black : Colors.white,
-           }}>
-           <Section title="Step One">
-             Edit <Text style={styles.highlight}>App.js</Text> to change this
-             screen and then come back to see your edits.
-           </Section>
-           <Section title="See Your Changes">
-             <ReloadInstructions />
-           </Section>
-           <Section title="Debug">
-             <DebugInstructions />
-           </Section>
-           <Section title="Learn More">
-             Read the docs to discover what to do next:
-           </Section>
-           <LearnMoreLinks />
-         </View>
-       </ScrollView>
-     </SafeAreaView>
-   );
- };
+    const openLink = () => {
+        const isLink = result.substring(0, 4)
 
- const styles = StyleSheet.create({
-   sectionContainer: {
-     marginTop: 32,
-     paddingHorizontal: 24,
-   },
-   sectionTitle: {
-     fontSize: 24,
-     fontWeight: '600',
-   },
-   sectionDescription: {
-     marginTop: 8,
-     fontSize: 18,
-     fontWeight: '400',
-   },
-   highlight: {
-     fontWeight: '700',
-   },
- });
+        if (isLink === 'http') {
+            Linking.openURL(result)
+                .catch((err) => console.log(err))
+        }
+    }
 
- export default App;
+    return (
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.titulo}>Leitor QRCode</Text>
+            </View>
+
+            {modoResult &&
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                    <View style={styles.containerResult}>
+                        <View style={{ alignItems: 'center' }}>
+                            <Icon name='qrcode' size={150} color={'#6b705c'} />
+                            <Text style={styles.textResult}>{result}</Text>
+                        </View>
+                        <View>
+                            <TouchableOpacity
+                                disabled={!result}
+                                style={!result ? styles.buttonTouchableDisabled : styles.buttonTouchable}
+                                onPress={openLink}
+                            >
+                                <Icon style={{ marginRight: 5 }} name='external-link' size={26} color={'#ffe8d6'} />
+                                <Text style={styles.buttonText} >Abrir Link</Text>
+                            </TouchableOpacity>
+                            <View style={styles.containerButtons}>
+                                <TouchableOpacity style={styles.buttonCopy} onPress={() => console.log('copiar')}>
+                                    <Icon name='copy' size={30} color={'#6b705c'} />
+                                    <Text style={styles.buttonTextCopy}>Copiar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.buttonCopy} onPress={() => console.log('compartilhar')}>
+                                    <Icon name='share-alt' size={30} color={'#6b705c'} />
+                                    <Text style={styles.buttonTextCopy}>Compartilhar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                    <TouchableOpacity style={styles.buttonTouchable} onPress={activeQR}>
+                        <Text style={styles.buttonText}>Clique para Escanear</Text>
+                    </TouchableOpacity>
+                </View>
+            }
+
+            {modoScan &&
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={styles.subTitulo}>
+                        Aponte e Leia
+                    </Text>
+
+                    <QRCodeScanner
+                        onRead={onSuccess}
+                        showMarker={true}
+                    />
+                    <View>
+                        <TouchableOpacity style={styles.buttonTouchable} onPress={closeScan}>
+                            <Text style={styles.buttonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            }
+        </SafeAreaView>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#a5a58d',
+    },
+    header: {
+        backgroundColor: '#6b705c',
+        alignItems: 'center',
+    },
+    titulo: {
+        fontSize: 28,
+        fontFamily: 'Righteous',
+        color: '#ffe8d6',
+        margin: 16,
+    },
+    subTitulo: {
+        fontSize: 36,
+        fontFamily: 'Lato-Light',
+        color: '#ffe8d6',
+        margin: 28,
+    },
+    buttonText: {
+        fontSize: 30,
+        fontFamily: 'Lato-Light',
+        color: '#ffe8d6',
+    },
+    buttonTouchable: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'baseline',
+        backgroundColor: '#6b705c',
+        marginTop: 20,
+        marginBottom: 38,
+        padding: 14,
+    },
+    buttonTouchableDisabled: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'baseline',
+        backgroundColor: '#B7B7A4',
+        marginTop: 20,
+        marginBottom: 38,
+        padding: 14,
+    },
+    containerResult: {
+        flex: 1,
+        backgroundColor: '#ffe8d6',
+        elevation: 5,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        width: '90%',
+        marginVertical: 22,
+        padding: 30,
+    },
+    labelResult: {
+        marginVertical: 12,
+        fontSize: 32,
+        fontFamily: 'Lato-Light',
+    },
+    textResult: {
+        fontSize: 24,
+        color: 'blue',
+        borderBottomWidth: 1,
+        borderBottomColor: 'blue',
+        marginVertical: 10,
+    },
+    containerButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    buttonCopy: {
+        alignItems: 'center',
+        marginHorizontal: 20,
+    },
+    buttonTextCopy: {
+        fontSize: 20,
+        fontFamily: 'Lato-Light',
+        color: '#6b705c',
+        marginTop: 10
+    }
+})
+
+export default App;
